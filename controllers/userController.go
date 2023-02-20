@@ -23,11 +23,11 @@ var userCollection *mongo.Collection = database.OpenCollection(database.Client, 
 var validate = validator.New()
 
 func HashPassword(password string)string{
-	hash,err := bcrypt.GenerateFromPassword([]byte(password),14)
+	bytes,err := bcrypt.GenerateFromPassword([]byte(password),14)
 	if err != nil{
 		log.Panic(err)
 	}
-	return string(hash)
+	return string(bytes)
 }
 
 func VerifyPassword(userPassword string, providedPassword string)(bool,string){
@@ -44,7 +44,8 @@ func VerifyPassword(userPassword string, providedPassword string)(bool,string){
 
 func SignUp()gin.HandlerFunc{
 	return func(c *gin.Context){
-		var ctx,cancel = context.WithTimeout(context.Background(),100*time.Second)
+		 ctx,cancel := context.WithTimeout(context.Background(),100*time.Second)
+		 defer cancel()
 		var user models.User
 
 if err := c.BindJSON(&user); err != nil {
@@ -65,14 +66,14 @@ if err != nil {
 
 password := HashPassword(*user.Password)
 user.Password = &password
-countnumber, err := userCollection.CountDocuments(ctx, bson.M{"phone":user.Phone})
+count2, err := userCollection.CountDocuments(ctx, bson.M{"phone":user.Phone})
 defer cancel()
 if err != nil {
 	log.Panic(err)
 	c.JSON(http.StatusInternalServerError, gin.H{"error":"error occured while checking for the phone number"})
 }
 
-if count > 0 || countnumber >0{
+if count > 0 || count2 > 0 {
 	c.JSON(http.StatusInternalServerError,gin.H{"error":"This phone number or email already exists"})
 }
 
@@ -98,6 +99,7 @@ c.JSON(http.StatusOK, resultInsertionNumber)
 func Login() gin.HandlerFunc{
 	return func(c *gin.Context){
 		var ctx, cancel = context.WithTimeout(context.Background(),100*time.Second)
+		defer cancel()
 		var user models.User
 		var foundUser models.User
 
@@ -114,7 +116,8 @@ func Login() gin.HandlerFunc{
 
 		passwordIsValid, msg := VerifyPassword(*user.Password, *foundUser.Password)
 		defer cancel()
-		if passwordIsValid != true{
+
+		if !passwordIsValid {
 			c.JSON(http.StatusInternalServerError,gin.H{"error":msg})
 			return
 		}
@@ -159,11 +162,9 @@ func GetUsers() gin.HandlerFunc{
 		{"$project",bson.D{
 			{"_id",0},
 			{"total_count",1},
-	    {"user_items",bson.D{{"$slice",[]interface{}{"$data",startIndex,recordPerPage}}}},}},
-  }
+	    {"user_items",bson.D{{"$slice",[]interface{}{"$data",startIndex,recordPerPage}}}},}}}
 result,err := userCollection.Aggregate(ctx,mongo.Pipeline{
-	matchStage,groupStage,projectStage,
-})
+	matchStage,groupStage,projectStage})
 defer cancel()
 if err != nil{
 	c.JSON(http.StatusInternalServerError,gin.H{"error":"error occured while listing user items"})
@@ -172,9 +173,7 @@ var allUsers []bson.M
 if err = result.All(ctx,&allUsers);err!=nil{
 	log.Fatal(err)
 }
-c.JSON(http.StatusOK,allUsers[0])
-	}
-}
+c.JSON(http.StatusOK,allUsers[0])}}
 
 func GetUser() gin.HandlerFunc{
 	return func(c *gin.Context){
