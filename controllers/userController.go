@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
-  "strconv"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/louismomo66/JWT_golang/database"
@@ -22,10 +23,11 @@ var userCollection *mongo.Collection = database.OpenCollection(database.Client, 
 var validate = validator.New()
 
 func HashPassword(password string)string{
-	bcrypt.GenerateFromPassword([]byte(password),14)
-	// if err != nil{
-	// 	log.Panic(err)
-	// }
+	hash,err := bcrypt.GenerateFromPassword([]byte(password),14)
+	if err != nil{
+		log.Panic(err)
+	}
+	return string(hash)
 }
 
 func VerifyPassword(userPassword string, providedPassword string)(bool,string){
@@ -128,7 +130,7 @@ func Login() gin.HandlerFunc{
 			c.JSON(http.StatusInternalServerError, gin.H{"error":err.Error()})
 			return
 		}
-		c.JSON{http.StatusOK, foundUser}
+		c.JSON(http.StatusOK, foundUser)
 
 	}
 }
