@@ -52,6 +52,22 @@ if err != nil{
 return token, refreshToken, err
 }
 
+func ValidateToken(signedToken string)(claims *SignedDetails,msg string){
+token,err := jwt.ParseWithClaims(
+	signedToken,
+	&SignedDetails{},
+	func(token *jwt.Token)(interface{},error){
+		return []byte(SECRET_KEY),nil
+	},
+)
+if err != nil{
+	msg=err.Error()
+	return
+}
+
+}
+
+
 func UpdateAllTokens(signedToken string, signedRefreshToken string, userId string){
 	var ctx, cancel = context.WithTimeout(context.Background(),100*time.Second)
 	var updateObj primitive.D
