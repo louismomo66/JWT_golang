@@ -44,7 +44,7 @@ func VerifyPassword(userPassword string, providedPassword string)(bool,string){
 
 func SignUp()gin.HandlerFunc{
 	return func(c *gin.Context){
-		 ctx,cancel := context.WithTimeout(context.Background(),100*time.Second)
+		 var ctx,cancel = context.WithTimeout(context.Background(),100*time.Second)
 		 defer cancel()
 		var user models.User
 
@@ -53,8 +53,10 @@ if err := c.BindJSON(&user); err != nil {
 	return
 }
 validationErr := validate.Struct(user)
+fmt.Println("This is the validation error",validationErr)
 if validationErr != nil {
 c.JSON(http.StatusBadRequest,gin.H{"error":validationErr.Error()})
+
 return
 }
 count, err := userCollection.CountDocuments(ctx,bson.M{"email":user.Email})
@@ -66,14 +68,14 @@ if err != nil {
 
 password := HashPassword(*user.Password)
 user.Password = &password
-count2, err := userCollection.CountDocuments(ctx, bson.M{"phone":user.Phone})
+count, err = userCollection.CountDocuments(ctx, bson.M{"phone":user.Phone})
 defer cancel()
 if err != nil {
 	log.Panic(err)
 	c.JSON(http.StatusInternalServerError, gin.H{"error":"error occured while checking for the phone number"})
 }
 
-if count > 0 || count2 > 0 {
+if count > 0 {
 	c.JSON(http.StatusInternalServerError,gin.H{"error":"This phone number or email already exists"})
 }
 
