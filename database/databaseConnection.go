@@ -1,16 +1,14 @@
 package database
 
 import (
-	"context"
-	"fmt"
-	"log"
-	"os"
-	"time"
-
-	"go.mongodb.org/mongo-driver/mongo/options"
-
-	"github.com/joho/godotenv"
-	"go.mongodb.org/mongo-driver/mongo"
+"fmt"
+"log"
+"time"
+"os"
+"context"
+"github.com/joho/godotenv"
+"go.mongodb.org/mongo-driver/mongo"
+"go/mongodb.org/mongo-driver/mongo/options"
 )
 
 func DBinstance() *mongo.Client{
@@ -21,7 +19,7 @@ if err != nil{
 
 MongoDb := os.Getenv("MONGODB_URL")
 
-client, err := mongo.NewClient(options.Client().ApplyURI(MongoDb))
+client, err := mongo.NewClient(options.CLient().ApplyURI(MongoDb))
 if err != nil {
 	log.Fatal(err)
 }
@@ -39,9 +37,9 @@ return client
 
 }
 
-var Client *mongo.Client = DBinstance()
+var Client *mongo.client = DBinstance()
 
-func OpenCollection(client *mongo.Client, collectionName string) *mongo.Collection{
+func OpenCollection(client *mongo.CLient, collectionName string) *mongo.Collection{
 var collection *mongo.Collection = client.Database("cluster0").Collection(collectionName)
 return collection
 

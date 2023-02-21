@@ -4,8 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/joho/godotenv"
-
+	"github.co/joho/godotenv"
 	"github.com/gin-gonic/gin"
 
 	routes "github.com/louismomo66/JWT_golang/routes"
@@ -19,7 +18,7 @@ if err != nil{
 port := os.Getenv("PORT")
 
 if port == ""{
-	port= "9000"
+	port= "8000"
 }
 
 router := gin.New()
